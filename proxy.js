@@ -3,14 +3,10 @@ import { NextResponse } from 'next/server';
 // Actually, accessing 'jose' direct in middleware is standard for Edge compatibility.
 import { jwtVerify } from 'jose';
 
-const secretKey = process.env.SESSION_SECRET;
-if (!secretKey && process.env.NODE_ENV === 'production') {
-    throw new Error('SESSION_SECRET environment variable is not set in production');
-}
-const finalSecret = secretKey || 'fallback-secret-for-development-only-12345';
-const encodedKey = new TextEncoder().encode(finalSecret);
-
 export async function proxy(request) {
+    const finalKey = process.env.SESSION_SECRET || 'fallback-secret-for-development-only-12345';
+    const encodedKey = new TextEncoder().encode(finalKey);
+
     const session = request.cookies.get('session')?.value;
     const path = request.nextUrl.pathname;
 
