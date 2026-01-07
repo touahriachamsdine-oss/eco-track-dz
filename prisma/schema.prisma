@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  name      String?
+  role      String    @default("citizen") // citizen, admin, collector
+  points    Int       @default(0)
+  vehicleType String?   // For collectors: Light Truck, Heavy Truck, etc.
+  specialization String? // For collectors: General, Medical, Recycling, etc.
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  reports   Report[]
+  tasks     Task[]    @relation("CollectorTasks")
+  messagesSent     Message[] @relation("SentMessages")
+  messagesReceived Message[] @relation("ReceivedMessages")
+  notifications    Notification[]
+  redemptions      Redemption[]
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  type        String   // Overflowing, Illegal Dumping, etc.
+  status      String   @default("pending") // pending, resolved, dismissed
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  imageUrl    String?
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  address     String
+  type        String   // Residential, Commercial, Medical, Recycling
+  status      String   @default("pending") // pending, in-progress, completed
+  bins        Int      @default(1)
+  time        String?
+  latitude    Float?
+  longitude   Float?
+  collectorId String?
+  collector   User?    @relation("CollectorTasks", fields: [collectorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Bin {
+  id          String   @id @default(cuid())
+  location    String
+  latitude    Float
+  longitude   Float
+  fillLevel   Int      @default(0) // percentage
+  status      String   @default("optimal") // optimal, warning, critical
+  type        String   @default("general") // general, plastic, paper, glass
+  lastEmptied DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model WasteGuide {
+  id           String @id @default(cuid())
+  name         String @unique
+  category     String // organic, plastic, paper, glass, hazardous
+  instructions String
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Reward {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  pointsCost  Int
+  category    String   // Groceries, Transit, Eco, Food
+  redemptions Redemption[]
+}
+
+model Redemption {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  rewardId  String
+  reward    Reward   @relation(fields: [rewardId], references: [id])
+  code      String   @default(cuid())
+  createdAt DateTime @default(now())
+}

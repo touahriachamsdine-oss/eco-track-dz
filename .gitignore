@@ -1,0 +1,15 @@
+node_modules
+.env
+.env*.local
+.next/
+out/
+build/
+dist/
+*.db
+*.db-journal
+.vercel
+node_modules/
+.agent/
+.gemini/
+scripts/check-*.js
+scripts/debug-*.js
